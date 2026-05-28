@@ -6,12 +6,11 @@ import json
 
 import pytest
 
-from tiptap_python_utils import TiptapValidationError
 from tiptap_python_utils import (
-    append_node,
+    Content,
+    TiptapValidationError,
     has_shared,
     new_shared_id,
-    replace_node,
     shared_families,
     shared_id,
     stamp_shared,
@@ -169,7 +168,7 @@ def test_append_node_appends_to_root_content():
         "content": [{"type": "text", "text": "appended"}],
     }
 
-    result = json.loads(append_node(document, new_node))
+    result = json.loads(Content.require(document).append_root(new_node).dump())
 
     assert len(result["content"]) == 2
     assert result["content"][0]["attrs"]["id"] == "p1"
@@ -185,7 +184,7 @@ def test_append_node_to_empty_document():
         "content": [{"type": "text", "text": "first"}],
     }
 
-    result = json.loads(append_node(document, new_node))
+    result = json.loads(Content.require(document).append_root(new_node).dump())
 
     assert len(result["content"]) == 1
     assert result["content"][0]["attrs"]["id"] == "p1"
@@ -291,10 +290,10 @@ def test_new_shared_id_returns_unique_values():
 
 
 def test_replace_node_replaces_target_node():
-    updated = replace_node(
-        _doc(_paragraph("node-1", "old")),
-        node_id="node-1",
-        node=json.dumps(_paragraph("node-1", "new")),
+    updated = (
+        Content.require(_doc(_paragraph("node-1", "old")))
+        .replace_by_id("node-1", json.dumps(_paragraph("node-1", "new")))
+        .dump()
     )
 
     payload = json.loads(updated)
@@ -307,10 +306,8 @@ def test_replace_node_rejects_mismatched_ids():
         TiptapValidationError,
         match="Node content attrs.id must match path node_id",
     ):
-        replace_node(
-            _doc(_paragraph("node-1", "old")),
-            node_id="node-1",
-            node=json.dumps(_paragraph("node-2", "new")),
+        Content.require(_doc(_paragraph("node-1", "old"))).replace_by_id(
+            "node-1", json.dumps(_paragraph("node-2", "new"))
         )
 
 
@@ -319,11 +316,9 @@ def test_replace_node_rejects_duplicate_target_occurrences():
         TiptapValidationError,
         match="appears multiple times in document content",
     ):
-        replace_node(
-            _doc(_paragraph("node-1", "old"), _paragraph("node-1", "other")),
-            node_id="node-1",
-            node=json.dumps(_paragraph("node-1", "new")),
-        )
+        Content.require(
+            _doc(_paragraph("node-1", "old"), _paragraph("node-1", "other"))
+        ).replace_by_id("node-1", json.dumps(_paragraph("node-1", "new")))
 
 
 def test_replace_node_rejects_missing_target():
@@ -331,8 +326,6 @@ def test_replace_node_rejects_missing_target():
         TiptapValidationError,
         match="Node with ID node-1 not found in document content",
     ):
-        replace_node(
-            _doc(_paragraph("node-2", "old")),
-            node_id="node-1",
-            node=json.dumps(_paragraph("node-1", "new")),
+        Content.require(_doc(_paragraph("node-2", "old"))).replace_by_id(
+            "node-1", json.dumps(_paragraph("node-1", "new"))
         )

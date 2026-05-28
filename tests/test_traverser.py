@@ -37,7 +37,7 @@ def test_walker_returns_typed_nodes_in_document_order():
     walker = Walker(content)
 
     assert walker.of_type(Heading) == [
-        Heading(id="h1", level=2, attrs={"id": "h1", "level": 2}, content=(Text(value="Project"),))
+        Heading(id="h1", attrs={"id": "h1", "level": 2}, content=(Text(value="Project"),))
     ]
     assert [node.id for node in walker.of_type(Paragraph)] == ["p1", ""]
     assert [node.task_item_id for node in walker.of_type(TaskItem)] == ["t1"]

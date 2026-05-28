@@ -2,7 +2,6 @@
 
 from .contract import key, kind
 from .content import Content
-from .edit import append_node, replace_node
 from .exceptions import TiptapValidationError
 from .model import (
     Blockquote,
@@ -60,7 +59,6 @@ __all__ = [
     "TiptapValidationError",
     "Unknown",
     "Walker",
-    "append_node",
     "content_id",
     "fingerprint_shared",
     "has_open_tasks",
@@ -72,7 +70,6 @@ __all__ = [
     "node_id",
     "open_tasks",
     "registry",
-    "replace_node",
     "shared_families",
     "shared_id",
     "stamp_shared",

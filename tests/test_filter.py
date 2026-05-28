@@ -7,8 +7,7 @@ pytestmark = [pytest.mark.unit]
 
 def item(task_item_id: str, *, done: bool = False) -> TaskItem:
     return TaskItem(
-        task_item_id=task_item_id,
-        is_completed=done,
+        attrs={"id": task_item_id, "checked": done},
         content=(Paragraph(content=(Text(value="Task"),)),),
     )
 

@@ -13,11 +13,9 @@ from tiptap_python_utils import (
     CodeBlock,
     Content,
     Doc,
-    Heading,
     ListItem,
     Node,
     Paragraph,
-    TaskItem,
     Text,
     Unknown,
     key,
@@ -229,7 +227,7 @@ def test_selection_text_attr_replace_append_and_dump_do_not_mutate_inputs():
         "content": [{"type": "text", "text": "Replacement"}],
     }
 
-    updated = Content.require(original).where_id("p1").text("New")
+    updated = Content.require(original).where_id("p1").leaf().text("New")
     with_attr = updated.where_id("p1").attr("color", "blue")
     attr_payload = with_attr.to_dict()
     replaced = with_attr.where_id("p1").replace(replacement)
@@ -276,8 +274,170 @@ def test_selection_set_can_update_text_key():
             }
         )
         .where_id("p1")
+        .leaf()
         .set(key.TEXT, "New")
         .dump()
     )
 
     assert payload["content"][0]["content"][0]["text"] == "New"
+
+
+def _doc_with_paragraph(text: str = "Hello") -> Content:
+    return Content.require(
+        {
+            "type": "doc",
+            "content": [
+                {
+                    "type": "paragraph",
+                    "attrs": {"id": "p1"},
+                    "content": [{"type": "text", "text": text}],
+                }
+            ],
+        }
+    )
+
+
+def test_selection_text_without_leaf_rejects_non_text_ref():
+    with pytest.raises(TiptapValidationError, match=".leaf"):
+        _doc_with_paragraph().where_id("p1").text("New")
+
+
+def test_selection_marks_without_leaf_rejects_non_text_ref():
+    with pytest.raises(TiptapValidationError, match=".leaf"):
+        _doc_with_paragraph().where_id("p1").marks([{"type": "bold"}])
+
+
+def test_selection_marks_requires_list():
+    with pytest.raises(TiptapValidationError, match="marks must be a list"):
+        _doc_with_paragraph().where_id("p1").leaf().marks("bold")
+
+
+def test_selection_leaf_descends_to_nested_text():
+    nested = Content.require(
+        {
+            "type": "doc",
+            "content": [
+                {
+                    "type": "blockquote",
+                    "attrs": {"id": "bq1"},
+                    "content": [
+                        {
+                            "type": "paragraph",
+                            "content": [{"type": "text", "text": "Deep"}],
+                        }
+                    ],
+                }
+            ],
+        }
+    )
+
+    updated = nested.where_id("bq1").leaf().text("Replaced").to_dict()
+    assert updated["content"][0]["content"][0]["content"][0]["text"] == "Replaced"
+
+
+def test_selection_leaf_skips_refs_without_text_descendants():
+    empty = Content.require(
+        {
+            "type": "doc",
+            "content": [{"type": "paragraph", "attrs": {"id": "p1"}, "content": []}],
+        }
+    )
+    selection = empty.where_id("p1").leaf()
+    assert len(selection) == 0
+
+
+def test_selection_marks_writes_marks_on_text():
+    updated = _doc_with_paragraph().where_id("p1").leaf().marks([{"type": "bold"}]).to_dict()
+    assert updated["content"][0]["content"][0]["marks"] == [{"type": "bold"}]
+
+
+def test_content_append_root_appends_node():
+    updated = (
+        _doc_with_paragraph()
+        .append_root({"type": "paragraph", "attrs": {"id": "p2"}, "content": []})
+        .to_dict()
+    )
+    assert [child["attrs"]["id"] for child in updated["content"]] == ["p1", "p2"]
+
+
+def test_content_replace_by_id_replaces_target():
+    updated = (
+        _doc_with_paragraph()
+        .replace_by_id(
+            "p1",
+            {
+                "type": "paragraph",
+                "attrs": {"id": "p1"},
+                "content": [{"type": "text", "text": "Replaced"}],
+            },
+        )
+        .to_dict()
+    )
+    assert updated["content"][0]["content"][0]["text"] == "Replaced"
+
+
+def test_content_replace_by_id_rejects_missing_attrs_id():
+    with pytest.raises(TiptapValidationError, match="must include attrs.id"):
+        _doc_with_paragraph().replace_by_id(
+            "p1", {"type": "paragraph", "attrs": {}, "content": []}
+        )
+
+
+def test_heading_level_tracks_attrs_after_attr_write():
+    doc = Content.require(
+        {
+            "type": "doc",
+            "content": [
+                {
+                    "type": "heading",
+                    "attrs": {"id": "h1", "level": 1},
+                    "content": [{"type": "text", "text": "Title"}],
+                }
+            ],
+        }
+    )
+
+    updated = doc.where_id("h1").attr("level", 4)
+    heading = updated.headings[0]
+    assert heading.level == 4
+    assert json.loads(updated.dump())["content"][0]["attrs"]["level"] == 4
+
+
+def test_task_item_is_completed_tracks_attrs_after_attr_write():
+    doc = Content.require(
+        {
+            "type": "doc",
+            "content": [
+                {
+                    "type": "taskList",
+                    "content": [
+                        {
+                            "type": "taskItem",
+                            "attrs": {"id": "t1", "checked": False},
+                            "content": [
+                                {
+                                    "type": "paragraph",
+                                    "content": [{"type": "text", "text": "Buy milk"}],
+                                }
+                            ],
+                        }
+                    ],
+                }
+            ],
+        }
+    )
+
+    updated = doc.where_id("t1").attr("checked", True)
+    assert updated.tasks[0].is_completed is True
+
+
+def test_heading_level_falls_back_to_one_when_attrs_invalid():
+    doc = Content.require(
+        {
+            "type": "doc",
+            "content": [
+                {"type": "heading", "attrs": {"level": 99}, "content": []},
+            ],
+        }
+    )
+    assert doc.headings[0].level == 1

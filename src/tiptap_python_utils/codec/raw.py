@@ -1,16 +1,18 @@
-"""TipTap raw JSON codec."""
+"""Raw TipTap JSON I/O and dict-shaped helpers.
+
+This module is intentionally free of any ``..model`` import so that raw
+validation can be exercised without hydrating the typed AST.
+"""
 
 from __future__ import annotations
 
 import json
 from copy import deepcopy
-from typing import Any, Dict, Mapping, Optional
-
-from ..exceptions import TiptapValidationError
-from ..types import DocumentContent
+from typing import Any, Dict, Iterator, Mapping, Optional
 
 from ..contract import key, kind, policy
-from ..model import ContentTuple, Doc, Node, registry
+from ..exceptions import TiptapValidationError
+from ..types import DocumentContent
 
 
 def parse_raw(raw: Optional[DocumentContent]) -> Optional[Dict[str, Any]]:
@@ -45,46 +47,6 @@ def require_object(
     return parsed
 
 
-def read_doc(raw: Mapping[str, Any]) -> Doc | None:
-    """Read a raw TipTap document root."""
-    if raw.get(key.TYPE) != kind.DOC:
-        return None
-    parsed = read_node(raw)
-    return parsed if isinstance(parsed, Doc) else None
-
-
-def read_node(raw: Mapping[str, Any]) -> Node:
-    """Read a raw TipTap node by delegating to the registry."""
-    children = read_children(raw.get(key.CONTENT, []))
-    return registry.read(raw, children)
-
-
-def read_children(raw_children: Any) -> ContentTuple:
-    if not isinstance(raw_children, list):
-        return ()
-    return tuple(read_node(child) for child in raw_children if isinstance(child, dict))
-
-
-def read_node_input(node_or_raw: Any, *, label: str) -> Node:
-    """Read either a typed node or a raw node payload."""
-    if isinstance(node_or_raw, Node):
-        return node_or_raw
-
-    parsed = require_object(node_or_raw, label=label)
-    node = read_doc(parsed) if parsed.get(key.TYPE) == kind.DOC else read_node(parsed)
-    if node is None:
-        raise TiptapValidationError(f"{label} must be a valid TipTap node")
-    return node
-
-
-def dump(node: Node) -> Dict[str, Any]:
-    return node.raw()
-
-
-def dumps(node: Node) -> str:
-    return json.dumps(dump(node))
-
-
 def raw_node_id(node: Mapping[str, Any]) -> str:
     return policy.content_id(node.get(key.ATTRS, {}))
 
@@ -97,7 +59,7 @@ def normalize_text(value: str) -> str:
     return " ".join(value.split())
 
 
-def _iter_text(node: Mapping[str, Any]):
+def _iter_text(node: Mapping[str, Any]) -> Iterator[str]:
     if not isinstance(node, dict):
         return
 

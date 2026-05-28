@@ -117,6 +117,18 @@ class Content:
             tuple(ref for ref in self.refs() if ref.node.kind == node_kind),
         )
 
+    def append_root(self, node_or_raw: Any) -> "Content":
+        return self.of(kind.DOC).append(node_or_raw)
+
+    def replace_by_id(self, node_id: str, node_or_raw: Any) -> "Content":
+        replacement = codec.read_node_input(node_or_raw, label="Node content")
+        replacement_id = replacement.attrs.get(key.ID, "")
+        if not replacement_id:
+            raise TiptapValidationError("Node content must include attrs.id")
+        if replacement_id != node_id:
+            raise TiptapValidationError("Node content attrs.id must match path node_id")
+        return self.where_id(node_id).replace(replacement)
+
     def dump(self) -> str:
         return json.dumps(self.to_dict())
 
