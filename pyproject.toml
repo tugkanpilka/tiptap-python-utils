@@ -1,0 +1,53 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "tiptap_python_utils"
+version = "0.1.0"
+description = "Python utilities for parsing, traversing, editing, and serializing TipTap JSON content."
+readme = "README.md"
+requires-python = ">=3.9"
+license = { file = "LICENSE" }
+authors = [
+  { name = "tiptap_python_utils contributors" }
+]
+keywords = ["tiptap", "prosemirror", "json", "ast", "editor"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Typing :: Typed",
+]
+dependencies = []
+
+[project.urls]
+Homepage = "https://github.com/tugkanpilka/tiptap-python-utils"
+Repository = "https://github.com/tugkanpilka/tiptap-python-utils"
+Issues = "https://github.com/tugkanpilka/tiptap-python-utils/issues"
+Changelog = "https://github.com/tugkanpilka/tiptap-python-utils/blob/main/CHANGELOG.md"
+
+[project.optional-dependencies]
+dev = [
+  "build>=1.2",
+  "pytest>=8",
+  "twine>=5",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+tiptap_python_utils = ["py.typed"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+markers = [
+  "unit: unit tests",
+]
