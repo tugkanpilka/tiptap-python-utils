@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from copy import deepcopy
 from dataclasses import replace
-from typing import TYPE_CHECKING, Any, Iterator, Tuple
+from typing import TYPE_CHECKING, Any, Callable, Iterator, Tuple
 
 from .. import codec
 from ..contract import key
@@ -68,6 +68,9 @@ class Selection:
         if isinstance(child, Doc):
             raise TiptapValidationError("Child node content must not be a document root")
         return self._apply(lambda node: node.append(child))
+
+    def transform(self, fn: Callable[[Node], Node]) -> "Content":
+        return self._apply(fn)
 
     def dump(self) -> str:
         return self._content.dump()

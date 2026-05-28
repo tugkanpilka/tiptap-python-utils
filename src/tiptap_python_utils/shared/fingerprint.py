@@ -1,21 +1,20 @@
-"""Identity-stripped fingerprint of a raw node, used to detect divergent bodies."""
+"""Identity-stripped fingerprint of a node, used to detect divergent bodies."""
 
 from __future__ import annotations
 
 import json
-from copy import deepcopy
-from typing import Any
 
 from ..contract import key
+from ..model import Node
 
 
-def fingerprint_shared(node: dict[str, Any]) -> str:
-    normalized = deepcopy(node)
-    attrs = dict(normalized.get(key.ATTRS, {}))
+def fingerprint(node: Node) -> str:
+    raw = node.raw()
+    attrs = dict(raw.get(key.ATTRS, {}))
     attrs.pop(key.ID, None)
     attrs.pop(key.SHARED_ID, None)
     if attrs:
-        normalized[key.ATTRS] = attrs
+        raw[key.ATTRS] = attrs
     else:
-        normalized.pop(key.ATTRS, None)
-    return json.dumps(normalized, sort_keys=True)
+        raw.pop(key.ATTRS, None)
+    return json.dumps(raw, sort_keys=True)

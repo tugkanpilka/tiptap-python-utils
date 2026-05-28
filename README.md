@@ -168,35 +168,43 @@ task.shared_id          # sharedId attr, if any
 
 ## Shared-Node Synchronization
 
-`shared_families` collects canonical bodies grouped by `sharedId`;
-`sync_shared` rewrites every matching node in a document using those canonical
-bodies while preserving per-instance identity (`id`, `sharedId`).
+`Content.shared_families()` collects canonical bodies grouped by `sharedId` into
+a `SharedFamilies` value object. `Content.sync_shared(families)` rewrites every
+matching node in the document from those canonical bodies, preserving
+per-instance identity (`id`, `sharedId`). Both return immutable values — the
+original `Content` is never mutated.
 
 ```python
-from tiptap_python_utils import shared_families, sync_shared
+from tiptap_python_utils import Content
 
 # Canonical doc: the source of truth for every shared body.
-canonical = {"type": "doc", "content": [
+canonical = Content.require({"type": "doc", "content": [
     {
         "type": "paragraph",
         "attrs": {"id": "p1", "sharedId": "intro"},
         "content": [{"type": "text", "text": "Authoritative intro"}],
     }
-]}
+]})
 
 # Doc that mirrors the same sharedId but with a stale body.
-target = {"type": "doc", "content": [
+target = Content.require({"type": "doc", "content": [
     {
         "type": "paragraph",
         "attrs": {"id": "p1-copy", "sharedId": "intro"},
         "content": [{"type": "text", "text": "Stale copy"}],
     }
-]}
+]})
 
-families = shared_families(canonical)
-synced_json, changed = sync_shared(target, families)
-assert changed is True
+synced = target.sync_shared(canonical.shared_families())
+assert synced.has_shared("intro")
 ```
+
+Related helpers on `Content`:
+
+- `content.where_shared_id(sid)` — `Selection` over every node with that sharedId.
+- `content.has_shared(sid)` — quick presence check.
+- `node.with_shared_id(sid)` — stamp a sharedId onto a node (returns a new node).
+- `new_shared_id()` — mint a fresh `shared-…` identifier.
 
 ## Architecture (one paragraph)
 
@@ -217,13 +225,13 @@ Common imports are available from the package root:
 from tiptap_python_utils import (
     Content,
     Paragraph,
+    SharedFamilies,
     TaskItem,
     Text,
     has_open_tasks,
     kind,
+    new_shared_id,
     open_tasks,
-    shared_families,
-    sync_shared,
     text_slices,
     visible_text,
     word_count,

@@ -79,6 +79,9 @@ class Node:
         attrs[name] = deepcopy(value)
         return replace(self, attrs=attrs, present=self.present | {key.ATTRS})
 
+    def with_shared_id(self, value: str) -> "Node":
+        return self.with_attr(key.SHARED_ID, value)
+
     def with_content(self, content: ContentTuple) -> "Node":
         return replace(self, content=content, present=self.present | {key.CONTENT})
 

@@ -1,47 +1,64 @@
-"""Group canonical bodies by sharedId and answer presence queries."""
+"""SharedFamilies: canonical bodies grouped by sharedId."""
 
 from __future__ import annotations
 
-from copy import deepcopy
-from typing import Any, Dict
+from dataclasses import dataclass, field
+from types import MappingProxyType
+from typing import TYPE_CHECKING, Iterator, Mapping
 
-from ..content import Content
+from .. import codec
 from ..contract import key
 from ..exceptions import TiptapValidationError
-from .fingerprint import fingerprint_shared
-from .identity import normalize_shared_id
+from ..model import Node
+from .fingerprint import fingerprint
+
+if TYPE_CHECKING:
+    from ..content import Content
 
 
-def shared_families(content: str | Dict[str, Any]) -> dict[str, dict[str, Any]]:
-    """Return canonical node bodies grouped by sharedId."""
-    tiptap = Content.require(content)
-    families: dict[str, dict[str, Any]] = {}
-    fingerprints: dict[str, str] = {}
+@dataclass(frozen=True)
+class SharedFamilies:
+    """Canonical node bodies indexed by sharedId."""
 
-    for ref in tiptap.refs(parseable=True):
-        node = ref.node.raw()
-        node_shared_id = normalize_shared_id(node.get(key.ATTRS, {}).get(key.SHARED_ID))
-        if not node_shared_id:
-            continue
+    _bodies: Mapping[str, Node] = field(default_factory=lambda: MappingProxyType({}))
 
-        fingerprint = fingerprint_shared(node)
-        if (
-            node_shared_id in fingerprints
-            and fingerprints[node_shared_id] != fingerprint
-        ):
-            raise TiptapValidationError(
-                f"Conflicting node bodies detected for sharedId '{node_shared_id}'"
-            )
-        if node_shared_id not in families:
-            families[node_shared_id] = deepcopy(node)
-            fingerprints[node_shared_id] = fingerprint
+    @classmethod
+    def from_content(cls, content: "Content") -> "SharedFamilies":
+        bodies: dict[str, Node] = {}
+        prints: dict[str, str] = {}
+        for ref in content.refs(parseable=True):
+            sid = ref.node.shared_id
+            if not sid:
+                continue
+            fp = fingerprint(ref.node)
+            if sid in prints and prints[sid] != fp:
+                raise TiptapValidationError(
+                    f"Conflicting node bodies detected for sharedId '{sid}'"
+                )
+            bodies.setdefault(sid, ref.node)
+            prints.setdefault(sid, fp)
+        return cls(MappingProxyType(bodies))
 
-    return families
+    def __contains__(self, shared_id: str) -> bool:
+        return shared_id in self._bodies
 
+    def __getitem__(self, shared_id: str) -> Node:
+        return self._bodies[shared_id]
 
-def has_shared(content: str | Dict[str, Any], shared_id: str) -> bool:
-    tiptap = Content.require(content)
-    for ref in tiptap.refs(parseable=True):
-        if normalize_shared_id(ref.node.attrs.get(key.SHARED_ID)) == shared_id:
-            return True
-    return False
+    def __iter__(self) -> Iterator[str]:
+        return iter(self._bodies)
+
+    def __len__(self) -> int:
+        return len(self._bodies)
+
+    def merge(self, target: Node) -> Node:
+        """Return target rewritten from the canonical body, preserving local id and sharedId."""
+        canonical = self[target.shared_id]
+        raw = canonical.raw()
+        attrs = dict(raw.get(key.ATTRS, {}))
+        if target.id:
+            attrs[key.ID] = target.id
+        if target.shared_id:
+            attrs[key.SHARED_ID] = target.shared_id
+        raw[key.ATTRS] = attrs
+        return codec.read_node(raw)

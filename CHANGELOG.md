@@ -1,5 +1,57 @@
 # Changelog
 
+## 0.3.0
+
+Shared-node API aligned with the `Content` / `Selection` chain. The previous
+dict-in / dict-out functional surface is gone — every shared-node operation is
+now a method on `Content`, `Node`, or the new `SharedFamilies` value object.
+
+### Breaking changes
+
+- Removed the functional shared API: `shared_families`, `sync_shared`,
+  `has_shared`, `shared_id`, `stamp_shared`, `fingerprint_shared`, and
+  `normalize_shared_id` no longer exist (neither at the package root nor under
+  `tiptap_python_utils.shared`).
+- Migration:
+  - `shared_families(content)` → `Content.require(content).shared_families()`
+    (returns a `SharedFamilies`, not a raw dict).
+  - `sync_shared(content, families)` → `Content.require(content).sync_shared(families)`
+    (returns a new `Content`; the `(json, changed)` tuple is gone — compare
+    `before.dump() != after.dump()` if you need a change flag).
+  - `has_shared(content, sid)` → `Content.require(content).has_shared(sid)`.
+  - `shared_id(node)` → `node.shared_id` (already a `Node` property).
+  - `stamp_shared(node, sid)` → `node.with_shared_id(sid)`. To override the
+    local id as well, chain `.with_attr("id", local_id)`.
+  - `fingerprint_shared(raw_dict)` → `fingerprint(node)` — now takes a typed
+    `Node`, not a raw dict.
+- `SharedFamilies` itself is immutable: `__contains__`, `__getitem__`,
+  `__iter__`, `__len__`, and `.merge(target)` for per-node rewrites.
+
+### Added
+
+- `Node.with_shared_id(value)` mirrors `with_attr` and returns a new node.
+- `Content.where_shared_id(sid) -> Selection` selects every parseable node
+  with a matching sharedId.
+- `Content.has_shared(sid) -> bool`, `Content.shared_families() -> SharedFamilies`,
+  and `Content.sync_shared(families) -> Content` replace the old functional
+  helpers.
+- `Selection.transform(fn)` is a new public escape hatch for per-node
+  rewrites: `Selection(...).transform(lambda node: ...)` returns a new
+  `Content`. Used internally by `Content.sync_shared`.
+
+### Architecture
+
+- `shared/sync.py` deleted; sync logic now lives on `Content` and reuses
+  `Selection.transform`.
+- `shared/families.py` rewritten around the new `SharedFamilies` dataclass,
+  which holds canonical `Node` bodies (not raw dicts) and exposes `.merge`.
+- `shared/fingerprint.py` operates on `Node`, not `dict`.
+- `shared/identity.py` collapsed to just `new_shared_id()`.
+- `shared/__init__.py` now exports `SharedFamilies`, `fingerprint`,
+  `new_shared_id` (down from 8 names).
+- Duplicate `TaskItem.shared_id` property removed — the base `Node.shared_id`
+  was already covering it.
+
 ## 0.2.0
 
 Architecture refactor (audit phases 1–4). Public surface is reorganized;

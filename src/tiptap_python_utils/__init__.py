@@ -22,15 +22,7 @@ from .model import (
 )
 from .contract.policy import content_id, is_parseable, node_id, tiptap_id
 from .select import Selection
-from .shared import (
-    fingerprint_shared,
-    has_shared,
-    new_shared_id,
-    shared_id,
-    shared_families,
-    stamp_shared,
-    sync_shared,
-)
+from .shared import SharedFamilies, fingerprint, new_shared_id
 from .tasks import has_open_tasks, open_tasks, syncable_tasks
 from .text import NodeText, text_slices, visible_text, word_count
 from .walk import Ref, Walker
@@ -52,6 +44,7 @@ __all__ = [
     "Paragraph",
     "Ref",
     "Selection",
+    "SharedFamilies",
     "TableCell",
     "TaskItem",
     "TaskList",
@@ -60,9 +53,8 @@ __all__ = [
     "Unknown",
     "Walker",
     "content_id",
-    "fingerprint_shared",
+    "fingerprint",
     "has_open_tasks",
-    "has_shared",
     "is_parseable",
     "key",
     "kind",
@@ -70,10 +62,6 @@ __all__ = [
     "node_id",
     "open_tasks",
     "registry",
-    "shared_families",
-    "shared_id",
-    "stamp_shared",
-    "sync_shared",
     "syncable_tasks",
     "text_slices",
     "tiptap_id",

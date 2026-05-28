@@ -60,14 +60,9 @@ SUBPACKAGE_PUBLIC_NAMES: dict[str, frozenset[str]] = {
     "tiptap_python_utils.select": frozenset({"Selection"}),
     "tiptap_python_utils.shared": frozenset(
         {
-            "fingerprint_shared",
-            "has_shared",
+            "SharedFamilies",
+            "fingerprint",
             "new_shared_id",
-            "normalize_shared_id",
-            "shared_families",
-            "shared_id",
-            "stamp_shared",
-            "sync_shared",
         }
     ),
     "tiptap_python_utils.tasks": frozenset(

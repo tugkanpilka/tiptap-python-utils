@@ -28,6 +28,7 @@ from .model import (
     Text,
 )
 from .select import Selection
+from .shared import SharedFamilies
 from .walk import Ref, Walker
 
 
@@ -116,6 +117,36 @@ class Content:
             self,
             tuple(ref for ref in self.refs() if ref.node.kind == node_kind),
         )
+
+    def where_shared_id(self, shared_id: str) -> Selection:
+        return Selection(
+            self,
+            tuple(
+                ref
+                for ref in self.refs(parseable=True)
+                if ref.node.shared_id == shared_id
+            ),
+        )
+
+    def has_shared(self, shared_id: str) -> bool:
+        return any(
+            ref.node.shared_id == shared_id for ref in self.refs(parseable=True)
+        )
+
+    def shared_families(self) -> SharedFamilies:
+        return SharedFamilies.from_content(self)
+
+    def sync_shared(self, families: SharedFamilies) -> "Content":
+        if self._root is None:
+            return self
+        refs = tuple(
+            ref
+            for ref in self.refs(parseable=True)
+            if ref.node.shared_id and ref.node.shared_id in families
+        )
+        if not refs:
+            return self
+        return Selection(self, refs).transform(families.merge)
 
     def append_root(self, node_or_raw: Any) -> "Content":
         return self.of(kind.DOC).append(node_or_raw)

@@ -66,10 +66,6 @@ class TaskItem(Node):
     def is_completed(self) -> bool:
         return bool(task_completion(self.attrs, self.extra))
 
-    @property
-    def shared_id(self) -> str | None:
-        return policy.shared_id(self.attrs)
-
     def raw_attrs(self) -> Dict[str, Any]:
         attrs = super().raw_attrs()
         if key.CHECKED in attrs or (

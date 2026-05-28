@@ -9,12 +9,7 @@ import pytest
 from tiptap_python_utils import (
     Content,
     TiptapValidationError,
-    has_shared,
     new_shared_id,
-    shared_families,
-    shared_id,
-    stamp_shared,
-    sync_shared,
 )
 
 pytestmark = [pytest.mark.unit]
@@ -38,110 +33,144 @@ def _doc(*nodes: dict) -> str:
 
 
 # ---------------------------------------------------------------------------
-# shared_families
+# Content.shared_families
 # ---------------------------------------------------------------------------
 
 
 def test_shared_families_should_reject_conflicts():
-    content = json.dumps(
-        {
-            "type": "doc",
-            "content": [
-                {
-                    "type": "paragraph",
-                    "attrs": {"id": "n1", "sharedId": "shared-1"},
-                    "content": [{"type": "text", "text": "one"}],
-                },
-                {
-                    "type": "paragraph",
-                    "attrs": {"id": "n2", "sharedId": "shared-1"},
-                    "content": [{"type": "text", "text": "two"}],
-                },
-            ],
-        }
+    content = Content.require(
+        json.dumps(
+            {
+                "type": "doc",
+                "content": [
+                    {
+                        "type": "paragraph",
+                        "attrs": {"id": "n1", "sharedId": "shared-1"},
+                        "content": [{"type": "text", "text": "one"}],
+                    },
+                    {
+                        "type": "paragraph",
+                        "attrs": {"id": "n2", "sharedId": "shared-1"},
+                        "content": [{"type": "text", "text": "two"}],
+                    },
+                ],
+            }
+        )
     )
 
     with pytest.raises(TiptapValidationError, match="Conflicting node bodies detected"):
-        shared_families(content)
+        content.shared_families()
 
 
 # ---------------------------------------------------------------------------
-# sync_shared
+# Content.sync_shared
 # ---------------------------------------------------------------------------
 
 
 def test_sync_shared_should_preserve_local_ids():
-    source = json.dumps(
-        {
-            "type": "doc",
-            "content": [
-                {
-                    "type": "paragraph",
-                    "attrs": {"id": "source-id", "sharedId": "shared-1"},
-                    "content": [{"type": "text", "text": "new"}],
-                }
-            ],
-        }
+    source = Content.require(
+        json.dumps(
+            {
+                "type": "doc",
+                "content": [
+                    {
+                        "type": "paragraph",
+                        "attrs": {"id": "source-id", "sharedId": "shared-1"},
+                        "content": [{"type": "text", "text": "new"}],
+                    }
+                ],
+            }
+        )
     )
-    target = json.dumps(
-        {
-            "type": "doc",
-            "content": [
-                {
-                    "type": "paragraph",
-                    "attrs": {"id": "target-id", "sharedId": "shared-1"},
-                    "content": [{"type": "text", "text": "old"}],
-                }
-            ],
-        }
+    target = Content.require(
+        json.dumps(
+            {
+                "type": "doc",
+                "content": [
+                    {
+                        "type": "paragraph",
+                        "attrs": {"id": "target-id", "sharedId": "shared-1"},
+                        "content": [{"type": "text", "text": "old"}],
+                    }
+                ],
+            }
+        )
     )
 
-    rewritten, changed = sync_shared(target, shared_families(source))
-    payload = json.loads(rewritten)
-    rewritten_node = payload["content"][0]
+    rewritten = target.sync_shared(source.shared_families())
+    rewritten_node = json.loads(rewritten.dump())["content"][0]
 
-    assert changed is True
     assert rewritten_node["attrs"]["id"] == "target-id"
     assert rewritten_node["attrs"]["sharedId"] == "shared-1"
     assert rewritten_node["content"][0]["text"] == "new"
 
 
+def test_sync_shared_no_op_when_no_matching_shared_id():
+    target = Content.require(
+        json.dumps(
+            {
+                "type": "doc",
+                "content": [
+                    {
+                        "type": "paragraph",
+                        "attrs": {"id": "p1", "sharedId": "shared-x"},
+                        "content": [{"type": "text", "text": "keep"}],
+                    }
+                ],
+            }
+        )
+    )
+    source = Content.require(
+        json.dumps(
+            {
+                "type": "doc",
+                "content": [
+                    {
+                        "type": "paragraph",
+                        "attrs": {"id": "s1", "sharedId": "shared-y"},
+                        "content": [{"type": "text", "text": "other"}],
+                    }
+                ],
+            }
+        )
+    )
+
+    rewritten = target.sync_shared(source.shared_families())
+
+    assert rewritten.dump() == target.dump()
+
+
 # ---------------------------------------------------------------------------
-# stamp_shared
+# Node.with_shared_id
 # ---------------------------------------------------------------------------
 
 
-def test_stamp_shared_stamps_shared_id():
-    node = {"type": "paragraph", "attrs": {"id": "n1"}, "content": []}
+def test_with_shared_id_stamps_shared_id():
+    paragraph = Content.wrap(
+        {"type": "paragraph", "attrs": {"id": "n1"}, "content": []}
+    ).root.content[0]
 
-    result = stamp_shared(node, shared_id="shared-99")
+    stamped = paragraph.with_shared_id("shared-99")
 
-    assert result["attrs"]["sharedId"] == "shared-99"
-    assert result["attrs"]["id"] == "n1"
-
-
-def test_stamp_shared_overrides_local_id():
-    node = {"type": "heading", "attrs": {"id": "old-id"}, "content": []}
-
-    result = stamp_shared(node, shared_id="shared-1", local_id="new-id")
-
-    assert result["attrs"]["id"] == "new-id"
-    assert result["attrs"]["sharedId"] == "shared-1"
+    assert stamped.shared_id == "shared-99"
+    assert stamped.id == "n1"
 
 
-def test_stamp_shared_preserves_existing_attrs():
-    node = {
-        "type": "paragraph",
-        "attrs": {"id": "n1", "level": 2, "color": "red"},
-        "content": [],
-    }
+def test_with_shared_id_preserves_existing_attrs():
+    paragraph = Content.wrap(
+        {
+            "type": "paragraph",
+            "attrs": {"id": "n1", "level": 2, "color": "red"},
+            "content": [],
+        }
+    ).root.content[0]
 
-    result = stamp_shared(node, shared_id="shared-5")
+    stamped = paragraph.with_shared_id("shared-5")
 
-    assert result["attrs"]["level"] == 2
-    assert result["attrs"]["color"] == "red"
-    assert result["attrs"]["sharedId"] == "shared-5"
-    assert node["attrs"].get("sharedId") is None
+    assert stamped.attrs["level"] == 2
+    assert stamped.attrs["color"] == "red"
+    assert stamped.shared_id == "shared-5"
+    assert paragraph.shared_id is None
 
 
 # ---------------------------------------------------------------------------
@@ -191,81 +220,126 @@ def test_append_node_to_empty_document():
 
 
 # ---------------------------------------------------------------------------
-# has_shared
+# Content.has_shared
 # ---------------------------------------------------------------------------
 
 
 def test_has_shared_true_when_present():
-    content = json.dumps(
-        {
-            "type": "doc",
-            "content": [
-                {
-                    "type": "paragraph",
-                    "attrs": {"id": "n1", "sharedId": "shared-abc"},
-                    "content": [],
-                }
-            ],
-        }
+    content = Content.require(
+        json.dumps(
+            {
+                "type": "doc",
+                "content": [
+                    {
+                        "type": "paragraph",
+                        "attrs": {"id": "n1", "sharedId": "shared-abc"},
+                        "content": [],
+                    }
+                ],
+            }
+        )
     )
 
-    assert has_shared(content, shared_id="shared-abc") is True
+    assert content.has_shared("shared-abc") is True
 
 
 def test_has_shared_false_when_absent():
-    content = json.dumps(
-        {
-            "type": "doc",
-            "content": [
-                {
-                    "type": "paragraph",
-                    "attrs": {"id": "n1", "sharedId": "shared-other"},
-                    "content": [],
-                }
-            ],
-        }
+    content = Content.require(
+        json.dumps(
+            {
+                "type": "doc",
+                "content": [
+                    {
+                        "type": "paragraph",
+                        "attrs": {"id": "n1", "sharedId": "shared-other"},
+                        "content": [],
+                    }
+                ],
+            }
+        )
     )
 
-    assert has_shared(content, shared_id="shared-abc") is False
+    assert content.has_shared("shared-abc") is False
 
 
 def test_has_shared_finds_nested_nodes():
-    content = json.dumps(
-        {
-            "type": "doc",
-            "content": [
-                {
-                    "type": "blockquote",
-                    "content": [
-                        {
-                            "type": "heading",
-                            "attrs": {"id": "h1", "sharedId": "shared-nested"},
-                            "content": [{"type": "text", "text": "deep"}],
-                        }
-                    ],
-                }
-            ],
-        }
+    content = Content.require(
+        json.dumps(
+            {
+                "type": "doc",
+                "content": [
+                    {
+                        "type": "blockquote",
+                        "content": [
+                            {
+                                "type": "heading",
+                                "attrs": {"id": "h1", "sharedId": "shared-nested"},
+                                "content": [{"type": "text", "text": "deep"}],
+                            }
+                        ],
+                    }
+                ],
+            }
+        )
     )
 
-    assert has_shared(content, shared_id="shared-nested") is True
+    assert content.has_shared("shared-nested") is True
 
 
 # ---------------------------------------------------------------------------
-# shared_id
+# Node.shared_id
 # ---------------------------------------------------------------------------
 
 
-def test_shared_id_returns_existing():
-    node = json.dumps(
+def test_node_shared_id_returns_existing():
+    node = Content.wrap(
         {"type": "paragraph", "attrs": {"id": "n1", "sharedId": "shared-42"}, "content": []}
+    ).root.content[0]
+    assert node.shared_id == "shared-42"
+
+
+def test_node_shared_id_returns_none_when_absent():
+    node = Content.wrap(
+        {"type": "paragraph", "attrs": {"id": "n1"}, "content": []}
+    ).root.content[0]
+    assert node.shared_id is None
+
+
+# ---------------------------------------------------------------------------
+# Content.where_shared_id
+# ---------------------------------------------------------------------------
+
+
+def test_where_shared_id_selects_matching_nodes():
+    content = Content.require(
+        json.dumps(
+            {
+                "type": "doc",
+                "content": [
+                    {
+                        "type": "paragraph",
+                        "attrs": {"id": "p1", "sharedId": "shared-1"},
+                        "content": [{"type": "text", "text": "one"}],
+                    },
+                    {
+                        "type": "paragraph",
+                        "attrs": {"id": "p2"},
+                        "content": [{"type": "text", "text": "two"}],
+                    },
+                    {
+                        "type": "paragraph",
+                        "attrs": {"id": "p3", "sharedId": "shared-1"},
+                        "content": [{"type": "text", "text": "one"}],
+                    },
+                ],
+            }
+        )
     )
-    assert shared_id(node) == "shared-42"
 
+    selection = content.where_shared_id("shared-1")
 
-def test_shared_id_returns_none_when_absent():
-    node = json.dumps({"type": "paragraph", "attrs": {"id": "n1"}, "content": []})
-    assert shared_id(node) is None
+    assert len(selection) == 2
+    assert {ref.node.id for ref in selection} == {"p1", "p3"}
 
 
 # ---------------------------------------------------------------------------
