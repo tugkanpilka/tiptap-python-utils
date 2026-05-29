@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.4.0
+
+Self-describing shared + place attrs in fingerprint/merge.
+
+### Changes
+
+- Added `shared` and `place` attribute keys to the contract (`contract/key.py`).
+- `SharedFamilies.merge` now preserves the target's per-copy `place`
+  discriminator while the family-identical `shared` core rides along from the
+  canonical body unchanged.
+- `fingerprint` now excludes the `shared`, `place`, and task canonical-id attrs
+  so family identity ignores per-copy and self-describing fields.
+
 ## 0.3.0
 
 Shared-node API aligned with the `Content` / `Selection` chain. The previous
