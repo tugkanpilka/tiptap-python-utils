@@ -52,13 +52,22 @@ class SharedFamilies:
         return len(self._bodies)
 
     def merge(self, target: Node) -> Node:
-        """Return target rewritten from the canonical body, preserving local id and sharedId."""
+        """Return target rewritten from the canonical body.
+
+        Preserves the target's per-copy identity (local id, sharedId) and its
+        per-copy ``place`` discriminator. The family-identical ``shared`` core
+        rides along from the canonical body unchanged.
+        """
         canonical = self[target.shared_id]
         raw = canonical.raw()
         attrs = dict(raw.get(key.ATTRS, {}))
+        attrs.pop(key.PLACE, None)
         if target.id:
             attrs[key.ID] = target.id
         if target.shared_id:
             attrs[key.SHARED_ID] = target.shared_id
+        target_attrs = target.raw().get(key.ATTRS, {})
+        if key.PLACE in target_attrs:
+            attrs[key.PLACE] = target_attrs[key.PLACE]
         raw[key.ATTRS] = attrs
         return codec.read_node(raw)
