@@ -141,6 +141,136 @@ def test_sync_shared_no_op_when_no_matching_shared_id():
 
 
 # ---------------------------------------------------------------------------
+# Self-describing shared core: `shared` (family-identical) + `place` (per-copy)
+# ---------------------------------------------------------------------------
+
+
+def test_shared_families_ignores_shared_and_place_when_fingerprinting():
+    # Two members of one family, identical body text, but differing per-copy
+    # `place` and differing `shared` core. These keys are provenance, not body,
+    # so the fingerprint must ignore them and NOT flag a conflict.
+    content = Content.require(
+        json.dumps(
+            {
+                "type": "doc",
+                "content": [
+                    {
+                        "type": "paragraph",
+                        "attrs": {
+                            "id": "n1",
+                            "sharedId": "shared-1",
+                            "shared": {"id": "shared-1", "topics": ["a"]},
+                            "place": {"context": "dated_note", "topicId": None},
+                        },
+                        "content": [{"type": "text", "text": "same body"}],
+                    },
+                    {
+                        "type": "paragraph",
+                        "attrs": {
+                            "id": "n2",
+                            "sharedId": "shared-1",
+                            "shared": {"id": "shared-1", "topics": ["b"]},
+                            "place": {"context": "undated_note", "topicId": "t-1"},
+                        },
+                        "content": [{"type": "text", "text": "same body"}],
+                    },
+                ],
+            }
+        )
+    )
+
+    families = content.shared_families()
+
+    assert "shared-1" in families
+
+
+def test_shared_families_still_rejects_real_body_divergence_despite_place():
+    # Differing `place` must not mask a genuine body difference: the text still
+    # differs, so this remains a conflict (guards against over-stripping).
+    content = Content.require(
+        json.dumps(
+            {
+                "type": "doc",
+                "content": [
+                    {
+                        "type": "paragraph",
+                        "attrs": {
+                            "id": "n1",
+                            "sharedId": "shared-1",
+                            "place": {"context": "dated_note", "topicId": None},
+                        },
+                        "content": [{"type": "text", "text": "one"}],
+                    },
+                    {
+                        "type": "paragraph",
+                        "attrs": {
+                            "id": "n2",
+                            "sharedId": "shared-1",
+                            "place": {"context": "undated_note", "topicId": "t-1"},
+                        },
+                        "content": [{"type": "text", "text": "two"}],
+                    },
+                ],
+            }
+        )
+    )
+
+    with pytest.raises(TiptapValidationError, match="Conflicting node bodies detected"):
+        content.shared_families()
+
+
+def test_sync_shared_preserves_per_copy_place_and_carries_shared_core():
+    source = Content.require(
+        json.dumps(
+            {
+                "type": "doc",
+                "content": [
+                    {
+                        "type": "paragraph",
+                        "attrs": {
+                            "id": "source-id",
+                            "sharedId": "shared-1",
+                            "shared": {"id": "shared-1", "primaryTopic": "t-react"},
+                            "place": {"context": "dated_note", "topicId": None},
+                        },
+                        "content": [{"type": "text", "text": "new"}],
+                    }
+                ],
+            }
+        )
+    )
+    target = Content.require(
+        json.dumps(
+            {
+                "type": "doc",
+                "content": [
+                    {
+                        "type": "paragraph",
+                        "attrs": {
+                            "id": "target-id",
+                            "sharedId": "shared-1",
+                            "shared": {"id": "shared-1", "primaryTopic": "STALE"},
+                            "place": {"context": "undated_note", "topicId": "t-react"},
+                        },
+                        "content": [{"type": "text", "text": "old"}],
+                    }
+                ],
+            }
+        )
+    )
+
+    rewritten = target.sync_shared(source.shared_families())
+    node = json.loads(rewritten.dump())["content"][0]
+
+    # Body + family-identical `shared` core come from the canonical (source).
+    assert node["content"][0]["text"] == "new"
+    assert node["attrs"]["shared"]["primaryTopic"] == "t-react"
+    # Per-copy identity and `place` stay the target's own.
+    assert node["attrs"]["id"] == "target-id"
+    assert node["attrs"]["place"] == {"context": "undated_note", "topicId": "t-react"}
+
+
+# ---------------------------------------------------------------------------
 # Node.with_shared_id
 # ---------------------------------------------------------------------------
 

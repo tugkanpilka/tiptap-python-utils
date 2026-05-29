@@ -13,6 +13,9 @@ def fingerprint(node: Node) -> str:
     attrs = dict(raw.get(key.ATTRS, {}))
     attrs.pop(key.ID, None)
     attrs.pop(key.SHARED_ID, None)
+    attrs.pop(key.SHARED, None)
+    attrs.pop(key.PLACE, None)
+    attrs.pop(key.TASK_CANONICAL_ID, None)
     if attrs:
         raw[key.ATTRS] = attrs
     else:
