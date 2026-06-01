@@ -20,6 +20,7 @@ import pytest
 SUBPACKAGE_PUBLIC_NAMES: dict[str, frozenset[str]] = {
     "tiptap_python_utils.codec": frozenset(
         {
+            "build_node",
             "dump",
             "dumps",
             "normalize_text",

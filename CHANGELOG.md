@@ -1,5 +1,25 @@
 # Changelog
 
+## 0.5.0
+
+Generic node construction and query helpers — a kind-agnostic convenience
+layer instead of per-kind shortcuts.
+
+### Added
+
+- `codec.build_node(node_kind, text="", *, attrs=None, node_id=None)` builds any
+  typed node by hydrating a minimal raw payload through the registry, so
+  subclass-typed fields (e.g. `Heading.level`) and `present` semantics are
+  derived exactly as when parsing JSON. `node_id` is only stamped when `attrs`
+  carries no identity of its own; container kinds reject inline `text`.
+- `Content.append(node_kind, text="", *, attrs=None, node_id=None)` composes
+  `build_node` + `append_root`, stamping a fresh id when none is given.
+- `Content.where(pred)` and `Selection.filter(pred)` / `Selection.any(pred)`
+  add generic predicate-based selection/query (replacing the need for
+  kind-specific helpers like a heading-only `has_heading_text`).
+- `new_node_id()` (top-level + `tiptap_python_utils.identity`) generates a bare
+  uuid id, distinct from the `shared-`-prefixed `new_shared_id()`.
+
 ## 0.4.0
 
 Self-describing shared + place attrs in fingerprint/merge.
