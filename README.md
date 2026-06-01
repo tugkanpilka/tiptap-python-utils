@@ -98,6 +98,22 @@ content.where_id("p1")
 
 # By TipTap kind.
 content.of(kind.PARAGRAPH)
+
+# By an arbitrary predicate over every node (and its descendants).
+content.where(lambda node: getattr(node, "level", None) == 1)
+```
+
+### Generic queries
+
+`Selection` carries two predicate primitives that work for any kind, so you
+don't need a bespoke `has_heading_text`-style helper per node type:
+
+```python
+# Narrow a selection further.
+content.of(kind.HEADING).filter(lambda n: n.level == 2)
+
+# Existence check (short-circuits).
+content.of(kind.HEADING).any(lambda n: n.text.strip() == "Introduction")
 ```
 
 ### Atomic mutations
@@ -123,6 +139,11 @@ content.where_id("ul1").append({"type": "listItem", "attrs": {"id": "li-new"}, "
 ```python
 # Append a node to the document root.
 content.append_root({"type": "paragraph", "attrs": {"id": "p2"}, "content": []})
+
+# Build-and-append in one call — works for any kind, stamps a fresh id when
+# none is given. Typed fields (e.g. Heading.level) hydrate correctly.
+content.append(kind.HEADING, "New section", attrs={"level": 2})
+content.append(kind.PARAGRAPH, "Body text", node_id="p3")
 
 # Replace a node by id (the replacement's attrs.id must match).
 content.replace_by_id("p1", {
@@ -230,6 +251,7 @@ from tiptap_python_utils import (
     Text,
     has_open_tasks,
     kind,
+    new_node_id,
     new_shared_id,
     open_tasks,
     text_slices,

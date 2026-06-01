@@ -43,6 +43,14 @@ class Selection:
         leaves = tuple(leaf for ref in self._refs for leaf in _first_text_descendant(ref))
         return Selection(self._content, leaves)
 
+    def filter(self, pred: Callable[[Node], bool]) -> "Selection":
+        """Narrow the selection to refs whose node matches ``pred``."""
+        return Selection(self._content, tuple(r for r in self._refs if pred(r.node)))
+
+    def any(self, pred: Callable[[Node], bool] = lambda _node: True) -> bool:
+        """True if any selected node matches ``pred`` (short-circuits)."""
+        return any(pred(r.node) for r in self._refs)
+
     def text(self, value: str) -> "Content":
         self._require_text_only("text")
         return self._apply(lambda node: node.with_text(value))

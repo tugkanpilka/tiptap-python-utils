@@ -44,6 +44,7 @@ EXPECTED_PUBLIC_API = frozenset(
         "is_parseable",
         "key",
         "kind",
+        "new_node_id",
         "new_shared_id",
         "node_id",
         "open_tasks",

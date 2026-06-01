@@ -21,6 +21,7 @@ from .model import (
     registry,
 )
 from .contract.policy import content_id, is_parseable, node_id, tiptap_id
+from .identity import new_node_id
 from .select import Selection
 from .shared import SharedFamilies, fingerprint, new_shared_id
 from .tasks import has_open_tasks, open_tasks, syncable_tasks
@@ -58,6 +59,7 @@ __all__ = [
     "is_parseable",
     "key",
     "kind",
+    "new_node_id",
     "new_shared_id",
     "node_id",
     "open_tasks",

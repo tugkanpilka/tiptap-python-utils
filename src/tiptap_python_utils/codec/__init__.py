@@ -8,6 +8,7 @@ from .raw import (
     require_object,
 )
 from .reader import (
+    build_node,
     read_children,
     read_doc,
     read_node,
@@ -16,6 +17,7 @@ from .reader import (
 from .writer import dump, dumps
 
 __all__ = [
+    "build_node",
     "dump",
     "dumps",
     "normalize_text",

@@ -5,13 +5,14 @@ from __future__ import annotations
 import json
 from copy import deepcopy
 from dataclasses import dataclass
-from typing import Any, Dict, Iterator, Optional
+from typing import Any, Callable, Dict, Iterator, Optional
 
 from .exceptions import TiptapValidationError
 from .types import DocumentContent
 
 from . import codec
 from .contract import key, kind, policy
+from .identity import new_node_id
 from .model import (
     Blockquote,
     BulletList,
@@ -118,6 +119,9 @@ class Content:
             tuple(ref for ref in self.refs() if ref.node.kind == node_kind),
         )
 
+    def where(self, pred: Callable[[Node], bool]) -> Selection:
+        return Selection(self, tuple(self.refs())).filter(pred)
+
     def where_shared_id(self, shared_id: str) -> Selection:
         return Selection(
             self,
@@ -147,6 +151,19 @@ class Content:
         if not refs:
             return self
         return Selection(self, refs).transform(families.merge)
+
+    def append(
+        self,
+        node_kind: str,
+        text: str = "",
+        *,
+        attrs: Optional[Dict[str, Any]] = None,
+        node_id: Optional[str] = None,
+    ) -> "Content":
+        node = codec.build_node(
+            node_kind, text, attrs=attrs, node_id=node_id or new_node_id()
+        )
+        return self.append_root(node)
 
     def append_root(self, node_or_raw: Any) -> "Content":
         return self.of(kind.DOC).append(node_or_raw)
