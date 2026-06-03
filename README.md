@@ -5,23 +5,10 @@
 [![CI](https://github.com/tugkanpilka/tiptap-python-utils/actions/workflows/ci.yml/badge.svg)](https://github.com/tugkanpilka/tiptap-python-utils/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-Python utilities for [TipTap](https://tiptap.dev) JSON content.
-
-`tiptap_python_utils` parses TipTap documents into typed, immutable Python
-nodes, preserves unknown/custom nodes for lossless round trips, and provides
-small helpers for traversal, immutable edits, visible text extraction, task
-queries, and shared-node synchronization.
-
-- **Zero runtime dependencies.** Standard library only.
-- **Python 3.9+.** Tested on 3.9, 3.10, 3.11, 3.12, 3.13.
-- **Lossless round trip.** Unknown node kinds and any extra fields are preserved.
-- **Immutable AST.** All mutations return new instances via a fluent selection API.
-
-## Install
-
-```bash
-pip install tiptap_python_utils
-```
+TipTap is a JavaScript editor. If your backend is Python and you need to
+process TipTap JSON — extract text, query tasks, sync shared nodes — this
+library does it in pure Python with zero dependencies. No JS bridge, no
+Node.js subprocess.
 
 ## Quick Start
 
@@ -43,7 +30,23 @@ raw = {
 updated = Content.require(raw).where_id("p1").leaf().text("New").dump()
 ```
 
+## Features
+
+- **Zero runtime dependencies.** Standard library only.
+- **Python 3.9+.** Tested on 3.9, 3.10, 3.11, 3.12, 3.13.
+- **Lossless round trip.** Unknown node kinds and any extra fields are preserved.
+- **Immutable AST.** All mutations return new instances via a fluent selection API.
+
+## Install
+
+```bash
+pip install tiptap_python_utils
+```
+
 ## Three Ways to Load a Document
+
+Pick a constructor by how much you trust the input — lenient, strict, or
+auto-wrapping a bare node into a `doc`.
 
 | Constructor | When to use | On invalid input |
 |---|---|---|
@@ -53,7 +56,8 @@ updated = Content.require(raw).where_id("p1").leaf().text("New").dump()
 
 ## Lossless Round Trip
 
-Parsing never silently drops fields. Two mechanisms preserve information:
+Parsing never silently drops fields — custom nodes and unknown keys survive a
+parse-then-serialize cycle byte-for-byte. Two mechanisms preserve information:
 
 - `Node.extra` stores top-level keys that aren't part of the known schema
   (e.g. custom node attributes, vendor-specific keys).
@@ -74,7 +78,8 @@ assert Content.require(raw).to_dict() == raw  # byte-for-byte
 
 ## Typed Nodes
 
-Build typed nodes directly and serialize them back to TipTap-compatible JSON:
+Build typed nodes directly in Python and serialize them back to
+TipTap-compatible JSON.
 
 ```python
 from tiptap_python_utils import Content, Paragraph, Text
@@ -85,8 +90,8 @@ doc = Content.wrap(node.raw())
 
 ## Selection and Editing
 
-The fluent selection API is the single home for mutation. Selection methods
-return a new `Content`; the original is never mutated.
+The fluent selection API is the single home for mutation: every method returns
+a new `Content`, so the original is never mutated.
 
 ### Select by id or kind
 
@@ -155,6 +160,9 @@ content.replace_by_id("p1", {
 
 ## Text Extraction
 
+Pull the visible plain text out of a document — useful for search indexing,
+word counts, or previews.
+
 ```python
 from tiptap_python_utils import Content, text_slices, visible_text, word_count
 
@@ -166,6 +174,9 @@ slices = text_slices(content, context=True)
 ```
 
 ## Tasks
+
+Query task lists in a document — find every task item or check whether any are
+still open.
 
 ```python
 from tiptap_python_utils import Content, has_open_tasks, open_tasks
@@ -188,6 +199,9 @@ task.shared_id          # sharedId attr, if any
 ```
 
 ## Shared-Node Synchronization
+
+Keep copies of the same logical node (linked by `sharedId`) in sync — collect
+canonical bodies, then rewrite every matching node from them.
 
 `Content.shared_families()` collects canonical bodies grouped by `sharedId` into
 a `SharedFamilies` value object. `Content.sync_shared(families)` rewrites every
@@ -227,17 +241,6 @@ Related helpers on `Content`:
 - `node.with_shared_id(sid)` — stamp a sharedId onto a node (returns a new node).
 - `new_shared_id()` — mint a fresh `shared-…` identifier.
 
-## Architecture (one paragraph)
-
-The package is layered: `contract` (key/kind/policy primitives) → `model`
-(immutable AST with a registry of node classes; unknown kinds round-trip via
-`Unknown`) → `codec` (raw I/O in `raw.py`, hydration in `reader.py`, dump in
-`writer.py`) → `walk` & `tree` (traversal + path-based replacement on the
-immutable tree) → `select` (fluent `Selection` — the single home for mutation)
-→ `content` (public facade) → `text` / `tasks` / `shared` (user-facing
-workflows built on `Content`). All nodes are `@dataclass(frozen=True)`;
-mutations return new instances.
-
 ## Public API
 
 Common imports are available from the package root:
@@ -260,35 +263,21 @@ from tiptap_python_utils import (
 )
 ```
 
-## Stability
-
-The project is pre-1.0; minor versions may include breaking changes. See
-[CHANGELOG.md](CHANGELOG.md) for what changed and when.
-
-## Development
-
-```bash
-python -m venv .venv
-. .venv/bin/activate
-python -m pip install -e ".[dev]"
-pytest -q
-```
-
-Build and validate a release artifact:
-
-```bash
-python -m build
-python -m twine check dist/*
-```
-
 ## Contributing
 
 Issues and pull requests are welcome. Please read
-[CONTRIBUTING.md](CONTRIBUTING.md) for the local setup and release checklist,
-and open an issue at
+[CONTRIBUTING.md](CONTRIBUTING.md) for the local setup, architecture overview,
+and release checklist, and open an issue at
 [github.com/tugkanpilka/tiptap-python-utils/issues](https://github.com/tugkanpilka/tiptap-python-utils/issues)
-before larger changes so we can align on the approach.
+before opening a pull request so we can align on the approach.
 
 ## License
 
 MIT — see [LICENSE](LICENSE).
+
+## Stability
+
+The project is pre-1.0; minor versions may include breaking changes. See
+[CHANGELOG.md](CHANGELOG.md) for what changed and when.
+</content>
+</invoke>
