@@ -1,5 +1,26 @@
 # Changelog
 
+## 0.6.0
+
+Pure raw-dict `task` namespace for working with TipTap `taskList` / `taskItem`
+shapes without hydrating the typed AST. Complements the typed `tasks` package
+(`tasks` = typed queries over `Content`; `task` = raw JSON dict helpers).
+
+### Added
+
+- `task.create_list(items)` wraps `items` in a `{"type": "taskList",
+  "content": items}` block. It stores the list **by reference** (no
+  `deepcopy`/copy) so callers can keep appending to the original list and see
+  the change reflected in the block — a deliberate exception to the library's
+  usual copy-on-construct behaviour.
+- `task.is_list(item)` — `True` iff `item` is a dict with `type == "taskList"`
+  and a list `content`. Safe on missing keys.
+- `task.is_item(node)` — `True` iff `node` is a dict with `type == "taskItem"`.
+  Safe on missing keys.
+
+The `task` module is exported at the top level (`from tiptap_python_utils
+import task`) and imports only the `contract` layer (no `model` dependency).
+
 ## 0.5.0
 
 Generic node construction and query helpers — a kind-agnostic convenience

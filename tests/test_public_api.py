@@ -50,6 +50,7 @@ EXPECTED_PUBLIC_API = frozenset(
         "open_tasks",
         "registry",
         "syncable_tasks",
+        "task",
         "text_slices",
         "tiptap_id",
         "visible_text",

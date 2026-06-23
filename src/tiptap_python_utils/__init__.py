@@ -1,5 +1,6 @@
 """Public API for TipTap JSON utilities."""
 
+from . import task
 from .contract import key, kind
 from .content import Content
 from .exceptions import TiptapValidationError
@@ -65,6 +66,7 @@ __all__ = [
     "open_tasks",
     "registry",
     "syncable_tasks",
+    "task",
     "text_slices",
     "tiptap_id",
     "visible_text",
