@@ -66,6 +66,7 @@ SUBPACKAGE_PUBLIC_NAMES: dict[str, frozenset[str]] = {
             "new_shared_id",
         }
     ),
+    "tiptap_python_utils.task": frozenset({"create_list", "is_item", "is_list"}),
     "tiptap_python_utils.tasks": frozenset(
         {"has_open_tasks", "open_tasks", "syncable_tasks"}
     ),
