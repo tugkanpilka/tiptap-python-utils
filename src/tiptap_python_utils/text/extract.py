@@ -7,7 +7,7 @@ from typing import Iterable, Iterator, List, Optional, Tuple
 
 from ..content import Content
 from ..contract import kind
-from ..model import CodeBlock, Heading, Node, Paragraph, TaskItem
+from ..model import CodeBlock, Heading, ListItem, Node, Paragraph, TaskItem
 
 
 @dataclass(frozen=True)
@@ -40,7 +40,9 @@ def _content_nodes(content: Content) -> Iterator[NodeText]:
     for ref in content.refs(parseable=True):
         node = ref.node
         node_id = _node_id(node)
-        if not node_id or not isinstance(node, (Paragraph, Heading, TaskItem, CodeBlock)):
+        if not node_id or not isinstance(
+            node, (Paragraph, Heading, TaskItem, ListItem, CodeBlock)
+        ):
             continue
         yield NodeText(
             node_id=node_id,
@@ -53,13 +55,13 @@ def _content_nodes(content: Content) -> Iterator[NodeText]:
 def _node_id(node: Node) -> str:
     if isinstance(node, TaskItem):
         return node.task_item_id
-    return node.id
+    return node.id  # ListItem included
 
 
 def _tag(node: Node) -> str:
     if isinstance(node, Heading):
         return f"h{node.level}"
-    if node.kind == kind.TASK_ITEM:
+    if node.kind in (kind.TASK_ITEM, kind.LIST_ITEM):
         return "li"
     if node.kind == kind.CODE_BLOCK:
         return "code"
