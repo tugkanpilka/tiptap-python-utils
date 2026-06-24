@@ -1,5 +1,23 @@
 # Changelog
 
+## 0.7.0
+
+`text_slices()` now treats `listItem` (bullet and ordered lists) as an
+addressable text node, just like `taskItem`.
+
+### Changed
+
+- `text/extract.py` adds `ListItem` to the content-node whitelist. Previously a
+  `bulletList > listItem` produced **0 slices** — the inner `paragraph` is
+  suppressed by `policy.is_parseable` (single-identity rule) and `listItem`
+  itself was not collected, so the list item had no representative node and
+  never reached topic extraction. Now each `listItem` yields one slice with
+  `node_id` = the listItem's id, `text` = its (possibly nested) inner text,
+  `html_tag = "li"`, and `node_type = "listItem"`.
+- `orderedList > listItem` is covered by the same path automatically.
+
+Top-level `paragraph` and `taskList > taskItem` behaviour is unchanged.
+
 ## 0.6.0
 
 Pure raw-dict `task` namespace for working with TipTap `taskList` / `taskItem`
