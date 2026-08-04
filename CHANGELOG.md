@@ -1,5 +1,28 @@
 # Changelog
 
+## 0.8.0
+
+Unified trackability traversal and read-time id resolution for container blocks.
+
+### Added
+
+- `tracked_blocks()` and `TrackedBlock` — single traversal for node sync,
+  extraction, and word counting.
+- `lifted_paragraph_id()` (internal via `selection_id`) — when a
+  `taskItem` / `listItem` / `blockquote` / `tableCell` has no container
+  id but its direct child `paragraph` does, that id is used at read time
+  without rewriting stored JSON.
+
+### Changed
+
+- `text_slices()` and `word_count()` now delegate to `tracked_blocks()`.
+- `blockquote` and `tableCell` blocks with ids are included in extraction
+  and word counts (previously parser-visible but invisible to AI).
+- `has_open_tasks()` only returns `True` when at least one task has a
+  resolvable id and is not completed (fixes false positives on id-less
+  task shells).
+- `syncable_tasks()` uses `selection_id()` so lifted paragraph ids count.
+
 ## 0.7.0
 
 `text_slices()` now treats `listItem` (bullet and ordered lists) as an

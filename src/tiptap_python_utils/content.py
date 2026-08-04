@@ -11,19 +11,15 @@ from .exceptions import TiptapValidationError
 from .types import DocumentContent
 
 from . import codec
-from .contract import key, kind, policy
+from .contract import key, kind
 from .identity import new_node_id
 from .model import (
-    Blockquote,
     BulletList,
-    CodeBlock,
     Doc,
     Heading,
-    ListItem,
     Node,
     OrderedList,
     Paragraph,
-    TableCell,
     TaskItem,
     TaskList,
     Text,
@@ -188,7 +184,9 @@ class Content:
         raise TiptapValidationError("Document content is not valid")
 
     def word_count(self) -> int:
-        return sum(len(node.text.split()) for node in _word_count_nodes(self.root))
+        from .text.extract import word_count as count_words
+
+        return count_words(self)
 
     def _require_root(self) -> Doc:
         if self._root is None:
@@ -197,38 +195,3 @@ class Content:
 
     def _with_root(self, root: Doc) -> "Content":
         return Content(root.raw(), root)
-
-
-def _word_count_nodes(root: Optional[Doc]) -> Iterator[Node]:
-    if root is None:
-        return
-    for child in root.content:
-        yield from _iter_word_count_nodes(child)
-
-
-def _iter_word_count_nodes(node: Node) -> Iterator[Node]:
-    if _is_countable(node):
-        if _identity(node):
-            yield node
-        return
-
-    if _is_container(node):
-        for child in node.content:
-            yield from _iter_word_count_nodes(child)
-
-
-def _is_countable(node: Node) -> bool:
-    return isinstance(node, (Paragraph, Heading, TaskItem, ListItem, CodeBlock))
-
-
-def _is_container(node: Node) -> bool:
-    return isinstance(
-        node,
-        (Doc, TaskList, BulletList, OrderedList, Blockquote, TableCell),
-    )
-
-
-def _identity(node: Node) -> str:
-    if isinstance(node, TaskItem):
-        return node.task_item_id
-    return node.id or policy.node_id(node.attrs) or ""

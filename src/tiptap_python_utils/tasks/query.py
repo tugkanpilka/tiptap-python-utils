@@ -4,10 +4,11 @@ from __future__ import annotations
 
 from ..content import Content
 from ..model import TaskItem
+from ..walk.traversal import selection_id
 
 
 def syncable_tasks(items: list[TaskItem]) -> list[TaskItem]:
-    return [item for item in items if item.task_item_id]
+    return [item for item in items if selection_id(item)]
 
 
 def open_tasks(items: list[TaskItem]) -> list[TaskItem]:
@@ -15,4 +16,4 @@ def open_tasks(items: list[TaskItem]) -> list[TaskItem]:
 
 
 def has_open_tasks(content: Content) -> bool:
-    return bool(open_tasks(content.tasks))
+    return bool(open_tasks(syncable_tasks(content.tasks)))

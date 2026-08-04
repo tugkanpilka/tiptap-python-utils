@@ -26,7 +26,7 @@ from .identity import new_node_id
 from .select import Selection
 from .shared import SharedFamilies, fingerprint, new_shared_id
 from .tasks import has_open_tasks, open_tasks, syncable_tasks
-from .text import NodeText, text_slices, visible_text, word_count
+from .text import NodeText, TrackedBlock, text_slices, tracked_blocks, visible_text, word_count
 from .walk import Ref, Walker
 
 EMPTY_DOCUMENT_CONTENT = '{"type":"doc","content":[]}'
@@ -52,6 +52,7 @@ __all__ = [
     "TaskList",
     "Text",
     "TiptapValidationError",
+    "TrackedBlock",
     "Unknown",
     "Walker",
     "content_id",
@@ -68,6 +69,7 @@ __all__ = [
     "syncable_tasks",
     "task",
     "text_slices",
+    "tracked_blocks",
     "tiptap_id",
     "visible_text",
     "word_count",

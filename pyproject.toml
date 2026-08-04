@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "tiptap_python_utils"
-version = "0.7.0"
+version = "0.8.0"
 description = "Pure-Python utilities for processing TipTap JSON on the server side. Parse, traverse, edit, and serialize TipTap documents — no JavaScript bridge required. Zero runtime dependencies, Python 3.9+."
 readme = "README.md"
 requires-python = ">=3.9"
@@ -52,3 +52,15 @@ pythonpath = ["src"]
 markers = [
   "unit: unit tests",
 ]
+
+[tool.quality_kit]
+source_roots = ["src"]
+test_roots = ["tests"]
+coverage_reports = ["coverage.xml"]
+package = "tiptap_python_utils"
+layers = ["contract", "codec", "model", "tree", "walk", "select", "text", "tasks", "shared", "content"]
+
+[tool.quality_kit.lenses]
+enabled = ["reuse", "srp", "ocp", "needless-abstraction", "leaky-abstraction", "test-intent"]
+base_commit = "HEAD~1"
+max_files = 15

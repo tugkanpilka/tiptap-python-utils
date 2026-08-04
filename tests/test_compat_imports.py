@@ -71,7 +71,14 @@ SUBPACKAGE_PUBLIC_NAMES: dict[str, frozenset[str]] = {
         {"has_open_tasks", "open_tasks", "syncable_tasks"}
     ),
     "tiptap_python_utils.text": frozenset(
-        {"NodeText", "text_slices", "visible_text", "word_count"}
+        {
+            "NodeText",
+            "TrackedBlock",
+            "text_slices",
+            "tracked_blocks",
+            "visible_text",
+            "word_count",
+        }
     ),
     "tiptap_python_utils.tree": frozenset({"node_at_path", "replace_at_path"}),
     "tiptap_python_utils.walk": frozenset({"Ref", "Walker", "selection_id"}),

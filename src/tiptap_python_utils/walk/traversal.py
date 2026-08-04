@@ -2,13 +2,45 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from dataclasses import dataclass
-from typing import Any, Iterator, Optional, Tuple, Type, TypeVar
+from typing import Any, Optional, Tuple, Type, TypeVar
 
 from ..contract import kind, policy
-from ..model import CodeBlock, Heading, ListItem, Node, Paragraph, TaskItem
+from ..model import (
+    Blockquote,
+    CodeBlock,
+    Heading,
+    ListItem,
+    Node,
+    Paragraph,
+    TableCell,
+    TaskItem,
+)
 
 NodeT = TypeVar("NodeT", bound=Node)
+
+# Blocks that tracked_blocks() may surface. Keep in sync with selection_id resolution.
+TRACKABLE_NODE_CLASSES: tuple[Type[Node], ...] = (
+    Paragraph,
+    Heading,
+    TaskItem,
+    ListItem,
+    CodeBlock,
+    Blockquote,
+    TableCell,
+)
+
+# Trackable blocks whose id resolves via node.id when attrs lack one.
+# TaskItem is excluded — it has dedicated resolution in selection_id().
+SELECTION_ID_LEAF_CLASSES: tuple[Type[Node], ...] = (
+    Paragraph,
+    Heading,
+    ListItem,
+    CodeBlock,
+    Blockquote,
+    TableCell,
+)
 
 
 @dataclass(frozen=True)
@@ -56,9 +88,29 @@ def selection_id(node: Node) -> Optional[str]:
     if attrs_id:
         return attrs_id
     if isinstance(node, TaskItem):
-        return node.local_task_item_id or node.task_item_id or None
-    if isinstance(node, (Paragraph, Heading, ListItem, CodeBlock)):
+        return (
+            node.local_task_item_id
+            or node.task_item_id
+            or lifted_paragraph_id(node)
+            or None
+        )
+    lifted = lifted_paragraph_id(node)
+    if lifted:
+        return lifted
+    if isinstance(node, SELECTION_ID_LEAF_CLASSES):
         return node.id or None
+    return None
+
+
+def lifted_paragraph_id(node: Node) -> Optional[str]:
+    """Read-time id from a direct child paragraph when the container has none."""
+    if not isinstance(node, (TaskItem, ListItem, Blockquote, TableCell)):
+        return None
+    for child in node.content:
+        if isinstance(child, Paragraph):
+            child_id = policy.content_id(child.attrs) or child.id
+            if child_id:
+                return child_id
     return None
 
 

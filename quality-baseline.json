@@ -1,0 +1,226 @@
+{
+  "detail": {
+    "dead_doc_links": [],
+    "dependency_cycles": [],
+    "duplicate_block_pairs": [],
+    "hotspots": [
+      {
+        "commits": 6,
+        "file": "src/tiptap_python_utils/__init__.py"
+      }
+    ],
+    "layer_violations": [],
+    "lint_by_rule": {
+      "F401": 3,
+      "I001": 6,
+      "PYI019": 1,
+      "RUF022": 1,
+      "SIM103": 1,
+      "SIM118": 1,
+      "UP006": 40,
+      "UP035": 26,
+      "UP037": 35,
+      "UP045": 24
+    },
+    "longest_functions": [
+      {
+        "file": "src/tiptap_python_utils/select/selection.py",
+        "line": 118,
+        "lines": 26,
+        "name": "_set_raw_key"
+      },
+      {
+        "file": "src/tiptap_python_utils/codec/raw.py",
+        "line": 62,
+        "lines": 16,
+        "name": "_iter_text"
+      },
+      {
+        "file": "src/tiptap_python_utils/text/tracked.py",
+        "line": 103,
+        "lines": 16,
+        "name": "_apply_heading_context"
+      },
+      {
+        "file": "src/tiptap_python_utils/walk/traversal.py",
+        "line": 86,
+        "lines": 16,
+        "name": "selection_id"
+      }
+    ],
+    "magic_numbers": [
+      {
+        "file": "src/tiptap_python_utils/model/payload.py",
+        "line": 34,
+        "value": 6
+      }
+    ],
+    "overridden_safeties": [
+      {
+        "file": "tests/test_compat_imports.py",
+        "line": 131,
+        "text": "from tiptap_python_utils import Paragraph  # noqa: F401"
+      },
+      {
+        "file": "tests/test_compat_imports.py",
+        "line": 132,
+        "text": "from tiptap_python_utils.model import ContentTuple  # noqa: F401"
+      },
+      {
+        "file": "tests/test_compat_imports.py",
+        "line": 133,
+        "text": "from tiptap_python_utils.model import registry  # noqa: F401"
+      }
+    ],
+    "test_files": 11,
+    "worst_by_statements": [
+      {
+        "file": "src/tiptap_python_utils/shared/families.py",
+        "line": 54,
+        "name": "SharedFamilies.merge",
+        "over": 2,
+        "statements": 10
+      },
+      {
+        "file": "src/tiptap_python_utils/shared/fingerprint.py",
+        "line": 11,
+        "name": "fingerprint",
+        "over": 1,
+        "statements": 9
+      }
+    ],
+    "worst_crap": [
+      {
+        "coverage": 50,
+        "crap": 30.0,
+        "file": "src/tiptap_python_utils/select/selection.py",
+        "kind": "untested",
+        "line": 118,
+        "name": "_set_raw_key"
+      },
+      {
+        "coverage": 100,
+        "crap": 9.0,
+        "file": "src/tiptap_python_utils/walk/traversal.py",
+        "kind": "complex",
+        "line": 86,
+        "name": "selection_id"
+      },
+      {
+        "coverage": 55,
+        "crap": 7.3,
+        "file": "src/tiptap_python_utils/model/payload.py",
+        "kind": "untested",
+        "line": 37,
+        "name": "task_canonical_id"
+      },
+      {
+        "coverage": 86,
+        "crap": 7.1,
+        "file": "src/tiptap_python_utils/codec/raw.py",
+        "kind": "complex",
+        "line": 62,
+        "name": "_iter_text"
+      },
+      {
+        "coverage": 25,
+        "crap": 6.8,
+        "file": "src/tiptap_python_utils/model/nodes.py",
+        "kind": "untested",
+        "line": 60,
+        "name": "TaskItem.is_linked_copy"
+      },
+      {
+        "coverage": 92,
+        "crap": 6.0,
+        "file": "src/tiptap_python_utils/text/tracked.py",
+        "kind": "complex",
+        "line": 85,
+        "name": "_html_tag"
+      }
+    ],
+    "worst_tests": [
+      {
+        "bare_asserts": 0,
+        "conditionals": 1,
+        "file": "tests/test_compat_imports.py",
+        "line": 112,
+        "name": "test_subpackage_all_covers_expected_snapshot",
+        "sleeps": 0
+      },
+      {
+        "bare_asserts": 6,
+        "conditionals": 0,
+        "file": "tests/test_content.py",
+        "line": 150,
+        "name": "test_query_properties_return_nodes_in_document_order",
+        "sleeps": 0
+      },
+      {
+        "bare_asserts": 5,
+        "conditionals": 0,
+        "file": "tests/test_content.py",
+        "line": 213,
+        "name": "test_selection_text_attr_replace_append_and_dump_do_not_mutate_inputs",
+        "sleeps": 0
+      },
+      {
+        "bare_asserts": 4,
+        "conditionals": 0,
+        "file": "tests/test_mutations.py",
+        "line": 222,
+        "name": "test_sync_shared_preserves_per_copy_place_and_carries_shared_core",
+        "sleeps": 0
+      },
+      {
+        "bare_asserts": 4,
+        "conditionals": 0,
+        "file": "tests/test_mutations.py",
+        "line": 289,
+        "name": "test_with_shared_id_preserves_existing_attrs",
+        "sleeps": 0
+      },
+      {
+        "bare_asserts": 4,
+        "conditionals": 0,
+        "file": "tests/test_mutations.py",
+        "line": 311,
+        "name": "test_append_node_appends_to_root_content",
+        "sleeps": 0
+      },
+      {
+        "bare_asserts": 4,
+        "conditionals": 0,
+        "file": "tests/test_trackability_matrix.py",
+        "line": 302,
+        "name": "test_trackability_matrix",
+        "sleeps": 0
+      },
+      {
+        "bare_asserts": 4,
+        "conditionals": 0,
+        "file": "tests/test_traverser.py",
+        "line": 8,
+        "name": "test_walker_returns_typed_nodes_in_document_order",
+        "sleeps": 0
+      }
+    ]
+  },
+  "metrics": {
+    "crap_complex": 3,
+    "crap_untested": 3,
+    "dead_doc_links": 0,
+    "dependency_cycles": 0,
+    "duplicate_block_pairs": 0,
+    "functions_over_length": 4,
+    "hotspots_without_tests": 1,
+    "layer_violations": 0,
+    "lint_warnings": 138,
+    "magic_numbers": 1,
+    "overridden_safeties": 3,
+    "statements_over_budget": 3,
+    "test_assertion_roulette": 7,
+    "test_conditional_logic": 1,
+    "test_sleepy": 0
+  }
+}
